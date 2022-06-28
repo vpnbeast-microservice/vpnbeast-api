@@ -1,41 +1,25 @@
 package web
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/aws/aws-lambda-go/events"
+	commons "github.com/vpnbeast/golang-commons"
+	"go.uber.org/zap"
 )
 
-var ErrorMethodNotAllowed = "method Not allowed"
+var logger *zap.Logger
 
-func handleUnhandledEvent() (*events.APIGatewayProxyResponse, error) {
-	return apiResponse(http.StatusMethodNotAllowed, ErrorMethodNotAllowed)
+func init() {
+	logger = commons.GetLogger()
 }
 
-func handleHelloEvent(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	var request HelloRequest
-	if err := json.Unmarshal([]byte(req.Body), &request); err != nil {
-		return apiResponse(http.StatusBadRequest, ErrorBody{"failed to parse json body"})
-	}
-
-	return apiResponse(http.StatusOK, Response{Status: true, Message: fmt.Sprintf("hello %s", req.Body)})
-}
-
-func handlePingEvent(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	return apiResponse(http.StatusOK, Response{Status: true, Message: "pong"})
-}
-
-func HandleRequests(ctx context.Context, e events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	fmt.Println(e.Resource)
-	switch e.Resource {
-	case "/hello":
-		return handleHelloEvent(e)
-	case "/ping":
-		return handlePingEvent(e)
+func HandleRequests(e events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	logger.Info("request received", zap.String("path", e.Path))
+	switch e.Path {
+	case "/v1/hello":
+		return helloEventHandler(e)
+	case "/v1/ping":
+		return pingEventHandler(e)
 	default:
-		return handleUnhandledEvent()
+		return unhandledEventHandler()
 	}
 }

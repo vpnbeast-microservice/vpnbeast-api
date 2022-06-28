@@ -1,3 +1,6 @@
+# assumes that we have already a profile named thevpnbeast-root in AWS CLI config
+export AWS_PROFILE := thevpnbeast-root
+
 lint:
 	golangci-lint run
 
@@ -45,9 +48,15 @@ upgrade-direct-deps:
 	go mod tidy
 	go mod vendor
 
-compress:
+aws_build:
 	go get -v all
 	GOOS=linux go build -o build/main cmd/vpnbeast-api/main.go
 	zip -jrm build/main.zip build/main
+
+aws_upload: aws_build
+	aws lambda update-function-code --function-name vpnbeast-api --zip-file fileb://build/main.zip
+
+aws_publish: aws_build aws_upload
+	aws lambda publish-version --function-name vpnbeast-api
 
 all: test build run

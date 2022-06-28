@@ -1,5 +1,9 @@
 package web
 
+const (
+	ErrMethodNotAllowed = "method Not allowed"
+)
+
 type Response struct {
 	Status  bool   `json:"status"`
 	Message string `json:"message"`
