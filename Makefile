@@ -54,6 +54,9 @@ aws_build:
 	zip -jrm build/main.zip build/main
 
 aws_upload: aws_build
+	aws lambda update-function-code --function-name vpnbeast-api --zip-file fileb://build/main.zip
+
+aws_upload_publish: aws_build
 	aws lambda update-function-code --function-name vpnbeast-api --zip-file fileb://build/main.zip --publish
 
 all: test build run
